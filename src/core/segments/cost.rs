@@ -34,11 +34,7 @@ impl Segment for CostSegment {
                     format!("${:.4}", cost)
                 };
 
-                let secondary = if total_input >= 1000 {
-                    format!("in:{:.1}k", total_input as f64 / 1000.0)
-                } else {
-                    format!("in:{}", total_input)
-                };
+                let secondary = String::new();
 
                 let mut metadata = HashMap::new();
                 metadata.insert("cost".to_string(), cost.to_string());
