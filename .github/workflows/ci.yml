@@ -61,18 +61,18 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ccline-windows
-        path: target/release/ccline.exe
+        path: target/release/ccometixline.exe
 
     - name: Upload artifact (Linux)
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
         name: ccline-linux
-        path: target/release/ccline
+        path: target/release/ccometixline
 
     - name: Upload artifact (macOS)
       if: runner.os == 'macOS'
       uses: actions/upload-artifact@v4
       with:
         name: ccline-macos
-        path: target/release/ccline
+        path: target/release/ccometixline
