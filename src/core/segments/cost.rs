@@ -21,7 +21,8 @@ impl Segment for CostSegment {
         // 尝试获取当前模型的自定义定价
         if let Some(pricing) = model_config.get_pricing(&input.model.id) {
             // 从 transcript 累计 token 用量，用自定义定价计算成本
-            let (total_input, total_output) = cumulative_tokens_from_transcript(&input.transcript_path);
+            let (total_input, total_output) =
+                cumulative_tokens_from_transcript(&input.transcript_path);
 
             if total_input > 0 || total_output > 0 {
                 let cost = (total_input as f64 / 1_000_000.0) * pricing.price_per_million_input
