@@ -271,15 +271,15 @@ impl ModelConfig {
         self.model_entries
             .iter()
             .find(|e| model_lower.contains(&e.pattern.to_lowercase()))
-            .and_then(|e| {
-                match (e.price_per_million_input, e.price_per_million_output) {
+            .and_then(
+                |e| match (e.price_per_million_input, e.price_per_million_output) {
                     (Some(input), Some(output)) => Some(ModelPricing {
                         price_per_million_input: input,
                         price_per_million_output: output,
                     }),
                     _ => None,
-                }
-            })
+                },
+            )
     }
 
     /// Create default model configuration file with minimal template
