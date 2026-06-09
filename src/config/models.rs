@@ -17,6 +17,19 @@ pub struct ModelEntry {
     pub pattern: String,
     pub display_name: String,
     pub context_limit: u32,
+    /// 自定义输入价格（每百万 token，美元），用于覆盖 Claude Code 内置定价
+    #[serde(default)]
+    pub price_per_million_input: Option<f64>,
+    /// 自定义输出价格（每百万 token，美元），用于覆盖 Claude Code 内置定价
+    #[serde(default)]
+    pub price_per_million_output: Option<f64>,
+}
+
+/// 模型定价信息
+#[derive(Debug, Clone)]
+pub struct ModelPricing {
+    pub price_per_million_input: f64,
+    pub price_per_million_output: f64,
 }
 
 /// Context modifier that overrides context limits and appends a suffix to display names.
@@ -250,11 +263,30 @@ impl ModelConfig {
         suffix
     }
 
+    /// Get custom pricing for a model based on ID pattern matching.
+    /// Returns `Some(ModelPricing)` if a matching model entry has pricing configured,
+    /// otherwise `None` (meaning fall back to Claude Code's built-in pricing).
+    pub fn get_pricing(&self, model_id: &str) -> Option<ModelPricing> {
+        let model_lower = model_id.to_lowercase();
+        self.model_entries
+            .iter()
+            .find(|e| model_lower.contains(&e.pattern.to_lowercase()))
+            .and_then(|e| {
+                match (e.price_per_million_input, e.price_per_million_output) {
+                    (Some(input), Some(output)) => Some(ModelPricing {
+                        price_per_million_input: input,
+                        price_per_million_output: output,
+                    }),
+                    _ => None,
+                }
+            })
+    }
+
     /// Create default model configuration file with minimal template
     pub fn create_default_file<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error::Error>> {
         // Add comments and examples to the template
         let template_content = "# CCometixLine Model Configuration\n\
-             # This file defines model display names and context limits for different LLM models\n\
+             # This file defines model display names, context limits, and custom pricing\n\
              # File location: ~/.claude/ccline/models.toml\n\
              #\n\
              # Claude models are automatically recognized (Sonnet, Opus, Haiku) with\n\
@@ -265,11 +297,13 @@ impl ModelConfig {
              # Each [[models]] section defines a model pattern and its properties\n\
              # These take priority over built-in Claude model recognition\n\
              \n\
-             # Example:\n\
+             # Example with custom pricing:\n\
              # [[models]]\n\
              # pattern = \"my-model\"\n\
              # display_name = \"My Model\"\n\
              # context_limit = 128000\n\
+             # price_per_million_input = 0.50   # 每百万输入 token 价格 (USD)\n\
+             # price_per_million_output = 2.00  # 每百万输出 token 价格 (USD)\n\
              \n\
              # Context modifiers override context limits and append suffix to display names\n\
              # They are matched independently, enabling composition:\n\
