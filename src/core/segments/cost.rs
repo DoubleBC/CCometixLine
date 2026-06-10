@@ -1,7 +1,7 @@
 use super::{Segment, SegmentData};
 use crate::config::{InputData, ModelConfig, SegmentId, TranscriptEntry};
 use crate::utils::credentials;
-use chrono::{DateTime, Local, Utc};
+use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -89,12 +89,6 @@ fn today_transcript_files(transcript_path: &str) -> Vec<PathBuf> {
     files
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct BalanceCache {
-    balance: String,
-    cached_at: String,
-}
-
 #[derive(Debug, Deserialize)]
 struct BalanceInfo {
     currency: String,
@@ -152,7 +146,7 @@ impl Segment for CostSegment {
         let day_display = day_cost.map_or("-".to_string(), |c| format!("{:.2}", c));
 
         // ---- Part 3: 总余额 from DeepSeek API ----
-        let balance_display = 'bal: {
+        let balance_display = {
             let config = crate::config::Config::load().ok()?;
             let segment_config = config.segments.iter().find(|s| s.id == SegmentId::Cost)?;
             let api_url = segment_config
