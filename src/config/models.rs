@@ -17,10 +17,13 @@ pub struct ModelEntry {
     pub pattern: String,
     pub display_name: String,
     pub context_limit: u32,
-    /// 自定义输入价格（每百万 token，美元），用于覆盖 Claude Code 内置定价
+    /// 自定义输入价格 — 缓存未命中（每百万 token）
     #[serde(default)]
     pub price_per_million_input: Option<f64>,
-    /// 自定义输出价格（每百万 token，美元），用于覆盖 Claude Code 内置定价
+    /// 自定义输入价格 — 缓存命中（每百万 token），默认等于 price_per_million_input
+    #[serde(default)]
+    pub price_per_million_input_cached: Option<f64>,
+    /// 自定义输出价格（每百万 token）
     #[serde(default)]
     pub price_per_million_output: Option<f64>,
 }
@@ -29,6 +32,7 @@ pub struct ModelEntry {
 #[derive(Debug, Clone)]
 pub struct ModelPricing {
     pub price_per_million_input: f64,
+    pub price_per_million_input_cached: f64,
     pub price_per_million_output: f64,
 }
 
@@ -275,6 +279,9 @@ impl ModelConfig {
                 |e| match (e.price_per_million_input, e.price_per_million_output) {
                     (Some(input), Some(output)) => Some(ModelPricing {
                         price_per_million_input: input,
+                        price_per_million_input_cached: e
+                            .price_per_million_input_cached
+                            .unwrap_or(input),
                         price_per_million_output: output,
                     }),
                     _ => None,
@@ -337,6 +344,7 @@ impl Default for ModelConfig {
                     display_name: "GLM-4.5".to_string(),
                     context_limit: 128_000,
                     price_per_million_input: None,
+                    price_per_million_input_cached: None,
                     price_per_million_output: None,
                 },
                 ModelEntry {
@@ -344,6 +352,7 @@ impl Default for ModelConfig {
                     display_name: "Kimi K2 Turbo".to_string(),
                     context_limit: 128_000,
                     price_per_million_input: None,
+                    price_per_million_input_cached: None,
                     price_per_million_output: None,
                 },
                 ModelEntry {
@@ -351,6 +360,7 @@ impl Default for ModelConfig {
                     display_name: "Kimi K2".to_string(),
                     context_limit: 128_000,
                     price_per_million_input: None,
+                    price_per_million_input_cached: None,
                     price_per_million_output: None,
                 },
                 ModelEntry {
@@ -358,6 +368,7 @@ impl Default for ModelConfig {
                     display_name: "Qwen Coder".to_string(),
                     context_limit: 256_000,
                     price_per_million_input: None,
+                    price_per_million_input_cached: None,
                     price_per_million_output: None,
                 },
             ],

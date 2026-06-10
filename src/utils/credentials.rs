@@ -85,6 +85,21 @@ fn get_credentials_path() -> Option<PathBuf> {
     Some(home.join(".claude").join(".credentials.json"))
 }
 
+/// 从 Claude Code settings.json 中读取 API Key（用于第三方 API 如 DeepSeek）
+pub fn get_api_key() -> Option<String> {
+    let home = std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .ok()?;
+    let settings_path = PathBuf::from(home).join(".claude").join("settings.json");
+    let content = std::fs::read_to_string(&settings_path).ok()?;
+    let settings: serde_json::Value = serde_json::from_str(&content).ok()?;
+    settings
+        .get("env")
+        .and_then(|e| e.get("ANTHROPIC_AUTH_TOKEN"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+}
+
 /// Read OAuth token from a credentials file path
 fn read_token_from_path(path: &PathBuf) -> Option<String> {
     if !path.exists() {
