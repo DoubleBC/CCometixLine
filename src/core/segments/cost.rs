@@ -43,7 +43,12 @@ fn tokens_from_file(path: &Path) -> (u64, u64, u64) {
 }
 
 /// 计算单个 session 的花费
-fn calc_cost(pricing: &crate::config::models::ModelPricing, input_uncached: u64, input_cached: u64, output: u64) -> f64 {
+fn calc_cost(
+    pricing: &crate::config::models::ModelPricing,
+    input_uncached: u64,
+    input_cached: u64,
+    output: u64,
+) -> f64 {
     (input_uncached as f64 / 1_000_000.0) * pricing.price_per_million_input
         + (input_cached as f64 / 1_000_000.0) * pricing.price_per_million_input_cached
         + (output as f64 / 1_000_000.0) * pricing.price_per_million_output
@@ -149,10 +154,7 @@ impl Segment for CostSegment {
         // ---- Part 3: 总余额 from DeepSeek API ----
         let balance_display = 'bal: {
             let config = crate::config::Config::load().ok()?;
-            let segment_config = config
-                .segments
-                .iter()
-                .find(|s| s.id == SegmentId::Cost)?;
+            let segment_config = config.segments.iter().find(|s| s.id == SegmentId::Cost)?;
             let api_url = segment_config
                 .options
                 .get("balance_api_url")
