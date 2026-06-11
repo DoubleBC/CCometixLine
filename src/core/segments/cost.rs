@@ -81,14 +81,8 @@ impl Segment for CostSegment {
     fn collect(&self, _input: &InputData) -> Option<SegmentData> {
         // 读取配置中的 balance_api_url
         let config = crate::config::Config::load().ok()?;
-        let segment_config = config
-            .segments
-            .iter()
-            .find(|s| s.id == SegmentId::Cost)?;
-        let api_url = segment_config
-            .options
-            .get("balance_api_url")?
-            .as_str()?;
+        let segment_config = config.segments.iter().find(|s| s.id == SegmentId::Cost)?;
+        let api_url = segment_config.options.get("balance_api_url")?.as_str()?;
 
         // 获取 API Key 并查询余额
         let token = credentials::get_api_key()?;
