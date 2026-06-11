@@ -1,5 +1,5 @@
 use super::{Segment, SegmentData};
-use crate::config::{SegmentId, InputData};
+use crate::config::{InputData, SegmentId};
 use crate::utils::credentials;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -8,14 +8,16 @@ use std::path::PathBuf;
 /// 每日余额快照，用于计算今日花费
 #[derive(Debug, Serialize, Deserialize)]
 struct DailySnapshot {
-    date: String,           // YYYY-MM-DD，本地日期
-    start_balance: f64,     // 当日首次记录的余额
+    date: String,       // YYYY-MM-DD，本地日期
+    start_balance: f64, // 当日首次记录的余额
 }
 
 impl DailySnapshot {
     fn path() -> PathBuf {
         let home = dirs::home_dir().unwrap_or_default();
-        home.join(".claude").join("ccline").join(".daily_balance.json")
+        home.join(".claude")
+            .join("ccline")
+            .join(".daily_balance.json")
     }
 
     fn load() -> Option<Self> {
@@ -59,7 +61,10 @@ fn fetch_balance(api_url: &str, token: &str, timeout_secs: u64) -> Option<(f64, 
     body.balance_infos
         .and_then(|infos| infos.into_iter().next())
         .and_then(|info| {
-            info.total_balance.parse::<f64>().ok().map(|v| (v, info.currency))
+            info.total_balance
+                .parse::<f64>()
+                .ok()
+                .map(|v| (v, info.currency))
         })
 }
 
@@ -67,15 +72,23 @@ fn fetch_balance(api_url: &str, token: &str, timeout_secs: u64) -> Option<(f64, 
 pub struct CostSegment;
 
 impl CostSegment {
-    pub fn new() -> Self { Self }
+    pub fn new() -> Self {
+        Self
+    }
 }
 
 impl Segment for CostSegment {
     fn collect(&self, _input: &InputData) -> Option<SegmentData> {
         // 读取配置中的 balance_api_url
         let config = crate::config::Config::load().ok()?;
-        let segment_config = config.segments.iter().find(|s| s.id == SegmentId::Cost)?;
-        let api_url = segment_config.options.get("balance_api_url")?.as_str()?;
+        let segment_config = config
+            .segments
+            .iter()
+            .find(|s| s.id == SegmentId::Cost)?;
+        let api_url = segment_config
+            .options
+            .get("balance_api_url")?
+            .as_str()?;
 
         // 获取 API Key 并查询余额
         let token = credentials::get_api_key()?;
@@ -89,7 +102,11 @@ impl Segment for CostSegment {
             Some(snap) if snap.date == today => {
                 if balance > snap.start_balance {
                     // 充值了，重置基准
-                    DailySnapshot { date: today, start_balance: balance }.save();
+                    DailySnapshot {
+                        date: today,
+                        start_balance: balance,
+                    }
+                    .save();
                     0.0
                 } else {
                     (snap.start_balance - balance).max(0.0)
@@ -97,16 +114,16 @@ impl Segment for CostSegment {
             }
             _ => {
                 // 新的一天或无快照
-                DailySnapshot { date: today, start_balance: balance }.save();
+                DailySnapshot {
+                    date: today,
+                    start_balance: balance,
+                }
+                .save();
                 0.0
             }
         };
 
-        let primary = format!(
-            "¥{:.2}|¥{:.2}",
-            today_cost,
-            balance
-        );
+        let primary = format!("¥{:.2}|¥{:.2}", today_cost, balance);
 
         let mut metadata = HashMap::new();
         metadata.insert("currency".to_string(), currency);
@@ -118,5 +135,7 @@ impl Segment for CostSegment {
         })
     }
 
-    fn id(&self) -> SegmentId { SegmentId::Cost }
+    fn id(&self) -> SegmentId {
+        SegmentId::Cost
+    }
 }
