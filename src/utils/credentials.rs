@@ -85,8 +85,19 @@ fn get_credentials_path() -> Option<PathBuf> {
     Some(home.join(".claude").join(".credentials.json"))
 }
 
-/// 从 Claude Code settings.json 中读取 API Key（用于第三方 API 如 DeepSeek）
+/// Read the API key from settings, falling back to the inherited environment.
 pub fn get_api_key() -> Option<String> {
+    get_api_key_from_settings()
+        .filter(|token| !token.is_empty())
+        .or_else(|| {
+            std::env::var("ANTHROPIC_AUTH_TOKEN")
+                .ok()
+                .filter(|token| !token.is_empty())
+        })
+}
+
+/// 从 Claude Code settings.json 中读取 API Key（用于第三方 API 如 DeepSeek）
+fn get_api_key_from_settings() -> Option<String> {
     let home = std::env::var("HOME")
         .or_else(|_| std::env::var("USERPROFILE"))
         .ok()?;
